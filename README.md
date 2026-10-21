@@ -20,7 +20,7 @@ Most of the lab is clicking. You'll **copy-paste one script** and **type two sho
 
 - **Bold text** = a button or option to click.
 - `Gray text` = something to type, paste, or pick from a list.
-- Each step shows the clock time to finish by. If you fall behind, raise your hand; a helper will come to you.
+- If you fall behind, raise your hand; a helper will come to you.
 - Your AWS sandbox is free and temporary. You can't break anything or get charged, and it's deleted after the event.
 
 ## AWS words in plain language
@@ -51,7 +51,7 @@ Bring a laptop (not a phone or tablet), its charger, and the phone with your aut
 
 ---
 
-## Step 1: Log in (12:45–12:50 PM)
+## Step 1: Log in
 
 1. Open your bookmarked portal link (it ends in `.awsapps.com/start`) and sign in.
 2. Click the one AWS account you see, then click **WorkshopParticipant**. The AWS Console opens.
@@ -68,7 +68,7 @@ Your network (VPC and firewalls) is already built for you, so you'll just pick t
 
 ---
 
-## Step 2: Create your database (12:50–1:05 PM)
+## Step 2: Create your database
 
 We start with the database because AWS takes about 15 minutes to build it.
 
@@ -103,7 +103,7 @@ We start with the database because AWS takes about 15 minutes to build it.
 
 ---
 
-## Step 3: Launch your server (1:05–1:15 PM)
+## Step 3: Launch your server
 
 You'll rent a small cloud computer and give it a script that installs WordPress by itself.
 
@@ -171,7 +171,7 @@ chmod +x /usr/bin/connect-db /usr/bin/show-posts
 
 ---
 
-## Step 4: Wait and learn (1:15–1:30 PM)
+## Step 4: Wait and learn
 
 Your database is still being built and your server is installing WordPress. Listen to the speaker explain what you just built, then do these two quick checks.
 
@@ -182,7 +182,7 @@ Your database is still being built and your server is installing WordPress. List
 
 ---
 
-## Step 5: Connect WordPress to your database (1:30–1:40 PM)
+## Step 5: Connect WordPress to your database
 
 1. In the AWS Console, go to **EC2 → Instances** and click `wp-server`.
 2. Click **Connect** (top of the page). Choose the **EC2 Instance Connect** tab and click **Connect**. A black window with text opens in a new tab. This is your server's terminal.
@@ -199,7 +199,7 @@ sudo connect-db
 
 ---
 
-## Step 6: Set up your WordPress site (1:40–2:00 PM)
+## Step 6: Set up your WordPress site
 
 This part works just like this morning's WordPress workshop.
 
@@ -224,7 +224,7 @@ If the terminal window closed, open it again from **EC2 → Instances → wp-ser
 
 ---
 
-## Step 7: Wrap-up (2:00–2:15 PM)
+## Step 7: Wrap-up
 
 You don't need to delete anything; your sandbox is cleaned up automatically after the event. The speaker will show how to delete resources so you know what to do in your own AWS account in the future.
 
