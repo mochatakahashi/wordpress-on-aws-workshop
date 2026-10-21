@@ -1,6 +1,6 @@
 # WordPress on AWS Workshop
 
-**Session 2: WordPress Integration on AWS** · November 14, 2026 · 12:45–2:15 PM
+**Session 2: WordPress Integration on AWS** · November 14, 2026 
 
 No AWS experience needed. You'll put a real WordPress site on Amazon Web Services: the site runs on a cloud server (**EC2**), and its posts are saved in a cloud database (**RDS**). It's the hands-on version of this morning's hosting talk: today, you are the host.
 
@@ -60,46 +60,35 @@ Bring a laptop (not a phone or tablet), its charger, and the phone with your aut
 
 | Save this | You get it in | Write it here |
 | --- | --- | --- |
-| Database password | Step 2 (you make it up) | |
 | Server public IP | Step 3 | |
-| Database endpoint | Step 4 | |
-
-Your network (VPC and firewalls) is already built for you, so you'll just pick these names from lists: `wp-vpc`, `wp-web-sg`, `wp-db-sg`, `wp-db-subnets`.
+| Database password | Step 4 (you make it up) | |
+| Database endpoint | Step 5 | |
 
 ---
 
-## Step 2: Create your database
+## Step 2: Create your network (VPC)
 
-We start with the database because AWS takes about 15 minutes to build it.
+A VPC is your own private network in AWS. The "VPC and more" option builds everything in one click: the network, public subnets for your server, private subnets for your database, and the route to the internet.
 
-1. Click the search bar at the top, type `RDS`, and click **Aurora and RDS**.
-2. Click **Create database** (orange button).
-3. Go down the page and change **only** these settings. Leave everything else as it is.
+1. Click the search bar at the top, type `VPC`, and click **VPC**.
+2. Click **Create VPC** (orange button).
+3. Change **only** these settings:
 
-| Section on the page | Setting | Choose or type |
-| --- | --- | --- |
-| Choose a database creation method | | **Standard create** (or **Full configuration**) |
-| Engine options | Engine type | **MySQL** |
-| Templates | | **Free tier** (or **Dev/Test** if no Free tier) |
-| Availability and durability | | **Single-AZ DB instance** |
-| Settings | DB instance identifier | `wp-db` |
-| Settings | Master username | `admin` |
-| Settings | Credentials management | **Self managed** |
-| Settings | Master password and Confirm | Make one up: **letters and numbers only**, 8+ characters. Save it in your notepad. |
-| Instance configuration | DB instance class | **Burstable classes**, then `db.t3.micro` |
-| Storage | Allocated storage | `20` |
-| Storage → Additional storage configuration | Enable storage autoscaling | **Uncheck** it |
-| Connectivity | Compute resource | **Don't connect to an EC2 compute resource** |
-| Connectivity | Virtual private cloud (VPC) | `wp-vpc` |
-| Connectivity | DB subnet group | `wp-db-subnets` |
-| Connectivity | Public access | **No** |
-| Connectivity | VPC security group | **Choose existing**, click the **X** on `default`, then pick `wp-db-sg` |
-| Additional configuration (near the bottom) | Initial database name | `wordpress` |
-| Additional configuration | Enable deletion protection | **Unchecked** |
+| Setting | Choose or type |
+| --- | --- |
+| Resources to create | **VPC and more** |
+| Name tag auto-generation | Keep **Auto-generate** checked, and type `wp` |
+| IPv4 CIDR block | Leave as `10.0.0.0/16` |
+| Number of Availability Zones (AZs) | **2** |
+| Number of public subnets | **2** |
+| Number of private subnets | **2** |
+| NAT gateways | **None** (important: other options are blocked in the sandbox) |
+| VPC endpoints | **None** (important: change it from S3 Gateway) |
 
-4. Click **Create database** at the bottom. If a pop-up appears, click **Close**.
+4. Look at the **Preview** on the right: it shows your network as a diagram. Then click **Create VPC**.
+5. Wait until every line shows a green check (about 1 minute), then click **View VPC**.
 
-**Checkpoint:** you see `wp-db` with status **Creating**. Don't wait for it; go straight to Step 3.
+**Checkpoint:** you have a VPC named `wp-vpc`.
 
 ---
 
@@ -117,11 +106,14 @@ You'll rent a small cloud computer and give it a script that installs WordPress 
 | Application and OS Images | | Leave as **Amazon Linux 2023** |
 | Instance type | | `t3.micro` |
 | Key pair (login) | Key pair name | **Proceed without a key pair** (that's fine; you'll connect through the browser) |
-| Network settings | | Click **Edit** first, then set the next four rows |
+| Network settings | | Click **Edit** first, then set the rows below |
 | Network settings | VPC | `wp-vpc` |
-| Network settings | Subnet | `wp-subnet-public1` |
+| Network settings | Subnet | The one with **public1** in its name |
 | Network settings | Auto-assign public IP | **Enable** |
-| Network settings | Firewall (security groups) | **Select existing security group**, then `wp-web-sg` |
+| Network settings | Firewall (security groups) | **Create security group** |
+| Network settings | Security group name | `wp-web-sg` |
+| Network settings | Inbound rule 1 | Type **ssh**, Source type **Anywhere** |
+| Network settings | Click **Add security group rule** → Inbound rule 2 | Type **HTTP**, Source type **Anywhere** |
 | Advanced details (at the very bottom; click to expand) | User data (the last box) | Paste the script below |
 
 **Paste this into User data.** Click the copy button on the box, then click inside the User data box and press **Ctrl+V** (**Cmd+V** on Mac). The same script is also in [`scripts/user-data.sh`](scripts/user-data.sh).
@@ -171,9 +163,42 @@ chmod +x /usr/bin/connect-db /usr/bin/show-posts
 
 ---
 
-## Step 4: Wait and learn
+## Step 4: Create your database
 
-Your database is still being built and your server is installing WordPress. Listen to the speaker explain what you just built, then do these two quick checks.
+Now you'll create the database and tell AWS to connect it to your server. AWS sets up the firewall between them for you.
+
+1. Click the search bar at the top, type `RDS`, and click **Aurora and RDS**.
+2. Click **Create database** (orange button).
+3. Go down the page and change **only** these settings. Leave everything else as it is.
+
+| Section on the page | Setting | Choose or type |
+| --- | --- | --- |
+| Choose a database creation method | | **Standard create** (or **Full configuration**) |
+| Engine options | Engine type | **MySQL** |
+| Templates | | **Free tier** (or **Dev/Test** if no Free tier) |
+| Availability and durability | | **Single-AZ DB instance** |
+| Settings | DB instance identifier | `wp-db` |
+| Settings | Master username | `admin` |
+| Settings | Credentials management | **Self managed** |
+| Settings | Master password and Confirm | Make one up: **letters and numbers only**, 8+ characters. Save it in your notepad. |
+| Instance configuration | DB instance class | **Burstable classes**, then `db.t3.micro` |
+| Storage | Allocated storage | `20` |
+| Storage → Additional storage configuration | Enable storage autoscaling | **Uncheck** it |
+| Connectivity | Compute resource | **Connect to an EC2 compute resource** |
+| Connectivity | EC2 instance | `wp-server` |
+| Connectivity | Everything else (VPC, subnet group, public access, security group) | Leave as AWS fills it in |
+| Additional configuration (near the bottom) | Initial database name | `wordpress` |
+| Additional configuration | Enable deletion protection | **Unchecked** |
+
+4. Click **Create database** at the bottom. If a pop-up appears, click **Close**.
+
+**Checkpoint:** you see `wp-db` with status **Creating**. It takes about 15 minutes; the next step is what to do while you wait.
+
+---
+
+## Step 5: Wait and learn
+
+Your database is being built and your server is installing WordPress. Listen to the speaker explain what you just built, then do these two quick checks.
 
 1. **Check your server.** In a new browser tab, type `http://` followed by your public IP, for example `http://13.250.10.20`. You should see the message **Error establishing a database connection**. That's good news: WordPress is installed, it just isn't connected to the database yet. If the page is blank or shows a test page, wait 2 minutes and refresh.
 2. **Get your database address.** Go back to the AWS Console. Search `RDS`, open **Databases**, and wait until `wp-db` says **Available** (click the refresh icon). Click `wp-db`. Under **Connectivity & security**, copy the **Endpoint** (it ends in `.rds.amazonaws.com`) into your notepad.
@@ -182,7 +207,7 @@ Your database is still being built and your server is installing WordPress. List
 
 ---
 
-## Step 5: Connect WordPress to your database
+## Step 6: Connect WordPress to your database
 
 1. In the AWS Console, go to **EC2 → Instances** and click `wp-server`.
 2. Click **Connect** (top of the page). Choose the **EC2 Instance Connect** tab and click **Connect**. A black window with text opens in a new tab. This is your server's terminal.
@@ -199,7 +224,7 @@ sudo connect-db
 
 ---
 
-## Step 6: Set up your WordPress site
+## Step 7: Set up your WordPress site
 
 This part works just like this morning's WordPress workshop.
 
@@ -224,7 +249,7 @@ If the terminal window closed, open it again from **EC2 → Instances → wp-ser
 
 ---
 
-## Step 7: Wrap-up
+## Step 8: Wrap-up
 
 You don't need to delete anything; your sandbox is cleaned up automatically after the event. The speaker will show how to delete resources so you know what to do in your own AWS account in the future.
 
@@ -238,12 +263,14 @@ Please don't stop or restart your server during the session: its address would c
 | --- | --- |
 | Can't log in to the portal | Raise your hand. Don't create a personal AWS account. |
 | "Access denied" or "not authorized" | Check the top right says **Singapore**, and that you picked `t3.micro` / `db.t3.micro` exactly. |
-| `wp-vpc` or `wp-db-sg` isn't in the list | Check the Region is **Singapore**. Still missing? Raise your hand. |
-| Website page won't open | Make sure you typed `http://` (not `https://`). Wait 2 minutes and refresh. |
+| VPC creation fails on a NAT gateway or endpoint | NAT gateways and VPC endpoints must both be **None**. Raise your hand; a helper will help you delete and redo it. |
+| `wp-vpc` isn't in the list when launching the server | Check the Region is **Singapore** and that Step 2 finished with all green checks. |
+| `wp-server` isn't in the list when creating the database | Make sure the server was launched in Step 3 and the Region is Singapore. Click the refresh icon next to the list. |
+| Website page won't open | Make sure you typed `http://` (not `https://`), and that `wp-web-sg` has the HTTP rule. Wait 2 minutes and refresh. |
 | Still a test page after 10 minutes | The script may not have been pasted. Raise your hand; a helper will relaunch your server. |
 | `connect-db: command not found` | Same as above: the script wasn't pasted. Raise your hand. |
-| EC2 Instance Connect won't open | Wait 1 minute after the server shows Running and try again. Then raise your hand. |
-| NOT CONNECTED from `sudo connect-db` | Check the database says **Available**, then run it again with the exact endpoint and password. |
+| EC2 Instance Connect won't open | Check `wp-web-sg` has the ssh rule from **Anywhere**. Wait 1 minute after the server shows Running and try again. |
+| NOT CONNECTED from `sudo connect-db` | Check the database says **Available**, then run it again with the exact endpoint and password. If it still fails, the database may not be connected to `wp-server`; raise your hand. |
 | Database error page after SUCCESS | Refresh the page once or twice. Still there? Raise your hand. |
 
 Stuck for more than 5 minutes? Raise your hand. A helper can move you to a fresh sandbox so you can catch up.
@@ -252,6 +279,6 @@ Stuck for more than 5 minutes? Raise your hand. A helper can move you to a fresh
 
 ## Doing this in your own AWS account later
 
-This guide assumes the workshop sandbox, where the network is pre-built and costs are covered. In a personal account you would also need to create the VPC, subnets, security groups, and DB subnet group yourself, and you would pay for what you run. Always delete your RDS database and EC2 server when you're done.
+You can repeat this exact lab in a personal AWS account, but you'll pay for what you run. When you're done, delete in this order: the RDS database `wp-db` (no final snapshot), the EC2 server `wp-server`, then the VPC `wp-vpc` (deleting the VPC also removes its subnets and security groups).
 
 Organized by the **AWS Student Builder Group – APC** with **JPCS**.
